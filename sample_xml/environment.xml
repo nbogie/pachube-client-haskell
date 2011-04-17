@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eeml xmlns="http://www.eeml.org/xsd/0.5.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd">
+  <environment updated="2011-04-06T21:35:37.374970Z" id="504" creator="http://www.pachube.com/users/hdr">
+    <title>Pachube Office environment</title>
+    <feed>http://api.pachube.com/v2/feeds/504.xml</feed>
+    <status>live</status>
+    <description>Sensors in Pachube.com's headquarters.</description>
+    <website>http://www.pachube.com/</website>
+    <private>false</private>
+    <tag>hq</tag>
+    <tag>office</tag>
+    <location domain="physical" exposure="indoor" disposition="fixed">
+      <name>office</name>
+      <lat>51.5235375648154</lat>
+      <lon>-0.0807666778564453</lon>
+      <ele>23.0</ele>
+    </location>
+    <data id="0">
+      <tag>humidity</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">15</current_value>
+      <max_value>658.0</max_value>
+      <min_value>0.0</min_value>
+    </data>
+    <data id="1">
+      <tag>light level</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">586</current_value>
+      <max_value>980.0</max_value>
+      <min_value>0.0</min_value>
+    </data>
+    <data id="2">
+      <tag>temperature</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">350</current_value>
+      <max_value>774.0</max_value>
+      <min_value>158.0</min_value>
+    </data>
+    <data id="3">
+      <tag>door 1</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">0</current_value>
+      <max_value>0.0</max_value>
+      <min_value>0.0</min_value>
+    </data>
+    <data id="4">
+      <tag>door 2</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">0</current_value>
+      <max_value>0.0</max_value>
+      <min_value>0.0</min_value>
+    </data>
+    <data id="5">
+      <tag>failures</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">40</current_value>
+      <max_value>40.0</max_value>
+      <min_value>0.0</min_value>
+    </data>
+    <data id="6">
+      <tag>successes</tag>
+      <current_value at="2011-04-06T21:35:37.374970Z">-26278</current_value>
+      <max_value>32767.0</max_value>
+      <min_value>-32768.0</min_value>
+    </data>
+  </environment>
+</eeml>

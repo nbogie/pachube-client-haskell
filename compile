@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+ghc -fforce-recomp -Wall -fno-warn-missing-signatures --make PachubeClient.hs
+
+# for flag refs see
+# http://www.haskell.org/ghc/docs/7.0-latest/html/users_guide/flag-reference.html#id570580

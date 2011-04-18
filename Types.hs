@@ -60,7 +60,7 @@ data Datastream = Datastream {
   , dsDatapoints::[Datapoint] 
 } deriving (Show)
 
-makeEmptyDatastream dsId = Datastream dsId [] Nothing Nothing Nothing Nothing []
+makeEmptyDatastream di = Datastream di [] Nothing Nothing Nothing Nothing []
 
 data Location = Location { 
   locationDomain::Maybe String 

@@ -131,8 +131,8 @@ updateDatastream ei ds = do
   let e = makeEmptyEnvironment { envId = ei, envDatastreams = [ds]}
   let xml = outputEnvironment e
   let url = makeURLUpdateDatastream ei (dsId ds)
-  resp <- doPut url xml
-  case resp of
+  respEither <- doPut url xml
+  case respEither of
     Left err -> return $ Left err
     Right resp -> return $ Right True
 

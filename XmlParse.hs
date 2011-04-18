@@ -3,14 +3,10 @@ module XmlParse where
 -- https://github.com/acw/eve/blob/2a6f930771d88d4847d96c4c86ad86a7897b945c/EVE/LowLevel/API.hs
 -- http://koweycode.blogspot.com/2009/02/inkscape-layers.html
 
-import Control.Monad
-import Data.Maybe (fromMaybe, fromJust)
-import System.Environment (getArgs)
+import Data.Maybe (fromJust)
 import Text.XML.Light
-import Text.XML.Light.Output
 
 import Types
-
 
 parseEnvironmentXML :: String -> Maybe Environment
 --TODO:  error handling
@@ -37,7 +33,7 @@ processEnvs doc = let envs = findChildren (pxdName "environment") doc
                   in map processEnv envs
 
 findChildsText :: String -> Element -> Maybe String
-findChildsText childName elem = strContent `fmap` findChild (pxdName childName) elem 
+findChildsText childName el = strContent `fmap` findChild (pxdName childName) el
 
 -- data Environment = Environment {envId::EnvironmentId, envTitle::Maybe String, envPrivate::Bool, envDatastreams::[Datastream]} deriving (Show)
 processEnv :: Element -> Environment
@@ -72,16 +68,6 @@ basicName n = QName n Nothing Nothing
 
 pxdName :: String -> QName
 pxdName n = QName n (Just "http://www.eeml.org/xsd/0.5.1") Nothing
-
-processArtist artist contents = do
-  let eventEls = elChildren $ fromJust $ parseXMLDoc contents
-  when (length eventEls > 0) $ do
-    mapM_ processEvent eventEls
-    putStrLn ""
- 
-processEvent evt = putStrLn $ title ++ " @ " ++ location ++ " [" ++ date ++ "]"
- where [title, location, date] = map fa ["name", "venue_name", "start_date"]
-       fa n = fromJust $ findAttr (unqual n) evt
 
 main = demoRead
 

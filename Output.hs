@@ -1,10 +1,8 @@
 module Output where
 
 import Text.XML.Light
-import Text.XML.Light.Output
-import Data.Maybe (fromMaybe, fromJust)
-import Control.Monad
 import Data.Maybe (catMaybes)
+
 import Types
 
 stdAttrs :: [Attr]
@@ -53,8 +51,7 @@ mkTextElemSS tagName v =
 mkTextElemEnvF :: String -> (Environment -> Maybe String) -> Environment -> Maybe Content
 mkTextElemEnvF tagName fn env = 
   case fn env of
-    Just v -> let a = 3
-                  tNode :: Content
+    Just v -> let tNode :: Content
                   tNode = Text (CData CDataText v Nothing)
               in Just $ Elem $ Element (unqual tagName) [] [tNode] Nothing
     Nothing -> Nothing

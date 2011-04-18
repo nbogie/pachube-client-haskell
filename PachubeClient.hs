@@ -7,6 +7,7 @@ import Network.URI
 import Text.Regex.Posix
 
 import Types
+import PachubeClientAPIKey
 import XmlParse hiding (main)
 import Output
 
@@ -48,12 +49,8 @@ instance Paramable SearchFilter where
   toParam (OrderFilter    SORelevance)   = "order=relevance"
   toParam (OrderFilter    SOCreatedAt)   = "order=created_at"
   toParam (OrderFilter    SORetrievedAt) = "order=retrieved_at"
-
-readAPIKeyFromFile :: IO String
-readAPIKeyFromFile = readFile "api_key.txt"
-
-apiKeyHeader :: String -> Header
-apiKeyHeader apiKey = Header (HdrCustom "X-PachubeApiKey") apiKey
+myAPIKeyHeader :: Header
+myAPIKeyHeader = Header (HdrCustom "X-PachubeApiKey") getAPIKey
 
 acceptHeader :: Header
 acceptHeader = Header HdrAccept mimeTypeXML
@@ -168,9 +165,7 @@ makeURLUpdateDatastream ei di =
 (Right doc) if success. -}
 downloadURL :: String -> IO (Either String String)
 downloadURL url =
-    do  
-       apiKey <- readAPIKeyFromFile
-       resp <- simpleHTTP (request apiKey)
+    do resp <- simpleHTTP request
        case resp of
          Left x -> return $ Left ("Error connecting: " ++ show x)
          Right r -> 
@@ -182,26 +177,20 @@ downloadURL url =
                    Nothing -> return $ Left (show r)
                    Just newURL -> downloadURL newURL
                _ -> return $ Left (show r)
-    where request key = Request {rqURI = uri,
-                                 rqMethod = GET,
-                                 rqHeaders = [apiKeyHeader key, acceptHeader],
-                                 rqBody = ""}
+    where request = Request {rqURI = uri,
+                             rqMethod = GET,
+                             rqHeaders = [myAPIKeyHeader, acceptHeader],
+                             rqBody = ""}
           uri = fromMaybe (error $ "bad url: " ++ url) $ parseURI url
 
 doPut :: String -> String -> IO (Either String (Response String))
-doPut url body = do
-  apiKey <- readAPIKeyFromFile
-  doReq url PUT [apiKeyHeader apiKey, contentLengthHeader body] body
+doPut url body = doReq url PUT [myAPIKeyHeader, contentLengthHeader body] body
 
 doPost :: String -> String -> IO (Either String (Response String))
-doPost url body = do
-  apiKey <- readAPIKeyFromFile
-  doReq url POST [apiKeyHeader apiKey, contentLengthHeader body] body
+doPost url body = doReq url POST [myAPIKeyHeader, contentLengthHeader body] body
 
 doDelete :: String -> IO (Either String (Response String))
-doDelete url = do
-  apiKey <- readAPIKeyFromFile
-  doReq url DELETE [apiKeyHeader apiKey] ""
+doDelete url = doReq url DELETE [myAPIKeyHeader] ""
 
 doReq :: String -> RequestMethod -> [Header] -> String -> IO (Either String (Response String))
 doReq url method headers body =

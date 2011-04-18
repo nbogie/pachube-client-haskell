@@ -1,2 +1,4 @@
 *.log
 PachubeClientAPIKey.hs
+*.swp
+

@@ -7,11 +7,18 @@ import Output
 
 demoGet = do
   -- retrieve environments by tag and owner
-  envs <- (getEnvironments [("tag", "air quality"), ("user", "andre")])
+  envs <- getEnvironments [TagFilter "air quality", UserFilter "andre"]
   print $ map envCreator envs
   -- retrieve environment by id
   env <- getEnvironment 504
   print env
+
+demoGetComplex = do
+  envs <- getEnvironments [UserFilter "pachube", ContentFilter SCSummary, 
+               PageFilter 1, PerPageFilter 5, StatusFilter StatusLive]
+  print $ map envId envs
+  envsFree <- getEnvironments [FreeTextFilter "london", PerPageFilter 1]
+  print $ map envId envsFree
 
 demoPrintXML = putStrLn $ outputEnvironment makeTestEnvironment
 

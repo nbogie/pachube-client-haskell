@@ -1,6 +1,6 @@
 module PachubeClient where
 
-import Data.List (intercalate, sort, find)
+import Data.List (intercalate, find)
 import Data.Maybe
 import Network.HTTP
 import Network.URI
@@ -11,6 +11,44 @@ import PachubeClientAPIKey
 import XmlParse hiding (main)
 import Output
 
+data FeedStatus = StatusLive | StatusFrozen deriving (Eq, Ord, Show)
+data SearchContentOption = SCSummary | SCFull deriving (Eq, Ord, Show)
+data SearchOrderOption = SOCreatedAt | SORetrievedAt | SORelevance 
+       deriving (Eq, Ord, Show)
+
+-- in getEnvironments one can supply a list of search filters
+-- The rules of combination are not enforced here yet.
+-- TODO: some of these are "filters", some change output format, paging.
+data SearchFilter =   
+                                UserFilter      String
+                    |           TagFilter       String
+                    |           FreeTextFilter  String
+                    |           UnitFilter      String
+                    |           PageFilter      Int
+                    |           PerPageFilter   Int
+                    |           ContentFilter   SearchContentOption
+                    |           OrderFilter     SearchOrderOption
+                    |           StatusFilter    FeedStatus
+       deriving (Eq, Show)
+
+-- anything that can turn itself into a URL request parameter
+class Paramable a where
+  toParam :: a -> String
+
+instance Paramable SearchFilter where
+  toParam (UserFilter     n)             = "user="              ++ urlEncode n
+  toParam (TagFilter      n)             = "tag="               ++ urlEncode n
+  toParam (FreeTextFilter n)             = "q="                 ++ urlEncode n
+  toParam (UnitFilter     n)             = "unit="              ++ urlEncode n
+  toParam (StatusFilter   StatusLive)    = "status=live"
+  toParam (StatusFilter   StatusFrozen)  = "status=frozen"
+  toParam (ContentFilter  SCSummary)     = "content=summary"
+  toParam (ContentFilter  SCFull)        = "content=full"
+  toParam (PageFilter     i)             = "page="              ++ show      i
+  toParam (PerPageFilter  i)             = "per_page="          ++ show      i
+  toParam (OrderFilter    SORelevance)   = "order=relevance"
+  toParam (OrderFilter    SOCreatedAt)   = "order=created_at"
+  toParam (OrderFilter    SORetrievedAt) = "order=retrieved_at"
 myAPIKeyHeader :: Header
 myAPIKeyHeader = Header (HdrCustom "X-PachubeApiKey") getAPIKey
 
@@ -29,8 +67,6 @@ downloadEnvironments fs = downloadURL $ makeURLGetEnvironments fs
 downloadEnvironment :: EnvironmentId -> IO (Either String String)
 downloadEnvironment feedId = downloadURL $ makeURLGetEnvironment feedId
 
-type SearchFilter = (String,String)
-
 getEnvironments :: [SearchFilter] -> IO [Environment]
 getEnvironments fs = do
     respEither <- downloadEnvironments fs
@@ -43,7 +79,7 @@ getEnvironments fs = do
                      Nothing   -> return []
 
 getUserEnvironments :: UserName -> IO [Environment]
-getUserEnvironments u = getEnvironments [("user", urlEncode u)]
+getUserEnvironments u = getEnvironments [UserFilter u]
 
 getEnvironment :: EnvironmentId -> IO (Either String Environment)
 getEnvironment fId = do 
@@ -86,15 +122,15 @@ updateEnvironment env = do
 
 updateDatastreamSimply :: EnvironmentId -> DatastreamId -> String 
                           -> IO (Either String Bool)
-updateDatastreamSimply envId dsId val = do
-  let ds = (makeEmptyDatastream dsId) { dsCurrentValue = Just val }
-  updateDatastream envId ds
+updateDatastreamSimply ei di val = do
+  let ds = (makeEmptyDatastream di) { dsCurrentValue = Just val }
+  updateDatastream ei ds
 
 updateDatastream :: EnvironmentId -> Datastream -> IO (Either String Bool)
-updateDatastream envId ds = do
-  let e = makeEmptyEnvironment { envId = envId, envDatastreams = [ds]}
+updateDatastream ei ds = do
+  let e = makeEmptyEnvironment { envId = ei, envDatastreams = [ds]}
   let xml = outputEnvironment e
-  let url = makeURLUpdateDatastream envId (dsId ds)
+  let url = makeURLUpdateDatastream ei (dsId ds)
   resp <- doPut url xml
   case resp of
     Left err -> return $ Left err
@@ -116,14 +152,14 @@ makeURLGetEnvironments fs = baseURL ++ "/feeds" ++ extra
   where 
     extra = if null kvs then "" else paramStr
     paramStr = '?' : intercalate "&" kvs
-    kvs = map (\(k,v) -> urlEncode k ++ "=" ++ urlEncode v) fs
+    kvs = map toParam fs
 
 makeURLGetHistory :: EnvironmentId -> String
 makeURLGetHistory feedId = baseURL ++ "/feeds/" ++ show feedId 
     ++ "?start=2010-08-02T14:01:46Z&end=2010-08-02T17:01:46Z&interval=0"
 
-makeURLUpdateDatastream envId dsId = 
-  baseURL++"/feeds/"++ show envId ++"/datastreams/"++ urlEncode dsId ++".xml"
+makeURLUpdateDatastream ei di = 
+  baseURL++"/feeds/"++ show ei ++"/datastreams/"++ urlEncode di ++".xml"
 
 {- | Download a URL.  (Left errorMessage) if an error,
 (Right doc) if success. -}

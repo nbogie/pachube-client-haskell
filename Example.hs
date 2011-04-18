@@ -1,6 +1,5 @@
 module Main where
 
-import Data.Maybe (fromMaybe, fromJust)
 import Types
 import PachubeClient
 import Output

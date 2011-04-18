@@ -36,11 +36,14 @@ getEnvironments fs = do
     respEither <- downloadEnvironments fs
     case respEither of
       Left errMsg -> do 
-                        putStrLn $ "Failed" ++ errMsg
-                        return []
+                      putStrLn $ "Failed" ++ errMsg
+                      return []
       Right xml -> case parseEnvironmentsXML xml of
                      Just envs -> return envs
                      Nothing   -> return []
+
+getUserEnvironments :: UserName -> IO [Environment]
+getUserEnvironments u = getEnvironments [("user", urlEncode u)]
 
 getEnvironment :: EnvironmentId -> IO (Either String Environment)
 getEnvironment fId = do 
@@ -81,10 +84,26 @@ updateEnvironment env = do
   print resp
   return $ Right True
 
+updateDatastreamSimply :: EnvironmentId -> DatastreamId -> String 
+                          -> IO (Either String Bool)
+updateDatastreamSimply envId dsId val = do
+  let ds = (makeEmptyDatastream dsId) { dsCurrentValue = Just val }
+  updateDatastream envId ds
+
+updateDatastream :: EnvironmentId -> Datastream -> IO (Either String Bool)
+updateDatastream envId ds = do
+  let e = makeEmptyEnvironment { envId = envId, envDatastreams = [ds]}
+  let xml = outputEnvironment e
+  let url = makeURLUpdateDatastream envId (dsId ds)
+  resp <- doPut url xml
+  case resp of
+    Left err -> return $ Left err
+    Right resp -> return $ Right True
+
 baseURL :: String
 baseURL = "http://api.pachube.com/v2"
 
-makeURLCreateEnvironment = (baseURL ++ "/feeds.xml")
+makeURLCreateEnvironment = baseURL ++ "/feeds.xml"
 
 makeURLDeleteEnvironment :: EnvironmentId -> String
 makeURLDeleteEnvironment feedId = 
@@ -101,7 +120,10 @@ makeURLGetEnvironments fs = baseURL ++ "/feeds" ++ extra
 
 makeURLGetHistory :: EnvironmentId -> String
 makeURLGetHistory feedId = baseURL ++ "/feeds/" ++ show feedId 
-                           ++ "?start=2010-08-02T14:01:46Z&end=2010-08-02T17:01:46Z&interval=0"
+    ++ "?start=2010-08-02T14:01:46Z&end=2010-08-02T17:01:46Z&interval=0"
+
+makeURLUpdateDatastream envId dsId = 
+  baseURL++"/feeds/"++ show envId ++"/datastreams/"++ urlEncode dsId ++".xml"
 
 {- | Download a URL.  (Left errorMessage) if an error,
 (Right doc) if success. -}

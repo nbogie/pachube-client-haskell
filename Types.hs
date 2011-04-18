@@ -1,6 +1,8 @@
 module Types where
 
 type EnvironmentId = Integer
+type DatastreamId = String
+type UserName = String
 
 type PachubeTimestamp = String -- TODO: impl timestamp
 
@@ -58,7 +60,7 @@ data Datastream = Datastream {
   , dsDatapoints::[Datapoint] 
 } deriving (Show)
 
-makeEmptyDatastream dsId = Datastream dsId [] Nothing Nothing Nothing (Just "foo") []
+makeEmptyDatastream dsId = Datastream dsId [] Nothing Nothing Nothing Nothing []
 
 data Location = Location { 
   locationDomain::Maybe String 

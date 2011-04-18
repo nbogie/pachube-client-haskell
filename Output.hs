@@ -28,30 +28,30 @@ environmentToElement env = Element (unqual "eeml") stdAttrs contents Nothing
                         , ("description", envDescription)
                         , ("website", envWebsite)
                         ]
-        -- tags = Just $ mkElem "tags" (map (makeTextElemSS "tag") . envTags) env
-        tags = map (makeTextElemSS "tag") (envTags env)
+        -- tags = Just $ mkElem "tags" (map (mkTextElemSS "tag") . envTags) env
+        tags = map (mkTextElemSS "tag") (envTags env)
         dses = map mkDatastream (envDatastreams env)
-        m (k,f) = makeTextElemEnvF k f env
+        m (k,f) = mkTextElemEnvF k f env
         datapoints = Nothing
 
 mkDatastream :: Datastream -> Content
 mkDatastream ds = Elem $ Element (unqual "data") [Attr (unqual "id") (dsId ds)] ((catMaybes [minVal, maxVal, currVal])++tags) Nothing
   where 
-      maxVal = dsMaxValue ds >>= (return . (makeTextElemSS "max_value"))
-      minVal = dsMinValue ds >>= (return . (makeTextElemSS "min_value"))
-      currVal = dsCurrentValue ds >>= (return . (makeTextElemSS "current_value"))
+      maxVal = dsMaxValue ds >>= (return . (mkTextElemSS "max_value"))
+      minVal = dsMinValue ds >>= (return . (mkTextElemSS "min_value"))
+      currVal = dsCurrentValue ds >>= (return . (mkTextElemSS "current_value"))
       tags = []
 
 mkElem :: String -> (Environment -> [Content]) -> Environment -> Content
 mkElem tagName fn env = Elem $ Element (unqual tagName) [] (fn env) Nothing
 
-makeTextElemSS :: String -> String -> Content
-makeTextElemSS tagName v = 
+mkTextElemSS :: String -> String -> Content
+mkTextElemSS tagName v = 
   let tNode = Text (CData CDataText v Nothing)
   in Elem $ Element (unqual tagName) [] [tNode] Nothing
 
-makeTextElemEnvF :: String -> (Environment -> Maybe String) -> Environment -> Maybe Content
-makeTextElemEnvF tagName fn env = 
+mkTextElemEnvF :: String -> (Environment -> Maybe String) -> Environment -> Maybe Content
+mkTextElemEnvF tagName fn env = 
   case fn env of
     Just v -> let a = 3
                   tNode :: Content

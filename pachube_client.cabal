@@ -1,0 +1,32 @@
+Build-type:     Simple
+Name:           pachube-client-hs
+Version:        0.0.1
+Synopsis:       Client for Pachube API
+Description:    
+        An incomplete, experimental client for the v2 Pachube API: http://api.pachube.com/
+        So far the API just covers Environment and some Datastream resources.
+        This code is written by a Haskell novice and will almost certainly 
+        contain bad practices.
+
+Homepage:       https://github.com/nbogie/pachube_client_haskell
+Category:       Web
+License:        MIT
+License-file:   docs/LICENSE
+Author:         Neill Bogie
+Maintainer:     Neill Bogie
+Copyright:      Neill Bogie 2011
+Stability:      experimental
+Tested-with:    GHC ==6.12
+Cabal-version:  >= 1.4
+
+Library
+  Exposed-modules: PachubeClient
+
+  Build-depends:
+    base == 4.2.0.0, 
+    bytestring == 0.9.1.7, 
+    regex-posix == 0.94.4,
+    xml == 1.3.7,
+    network == 2.3,
+    HTTP == 4000.1.1,
+    containers == 0.3.0.0

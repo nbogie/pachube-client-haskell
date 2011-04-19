@@ -3,56 +3,67 @@ module Main where
 import Types
 import PachubeClient
 import Output
-import Data.Char (isSpace)
+import Control.Monad.Reader
 
-readApiKeyFromFile :: IO ApiKey 
-readApiKeyFromFile = do 
-  c <- readFile "api_key.txt"
-  let stripped = takeWhile (not . isSpace) c
-  return $ ApiKey stripped
+-- convenience alias.
+io = liftIO
 
-demoGet = do
-  -- retrieve environments by tag and owner
-  ak <- readApiKeyFromFile
-  envs <- getEnvironments ak [TagFilter "air quality", UserFilter "andre"]
-  print $ map envCreator envs
+demoGetEnv :: PBMonad ()
+demoGetEnv = do
   -- retrieve environment by id
-  env <- getEnvironment ak 504
-  print env
+  env <- getEnvironment 504
+  io $ print env
 
-demoGetComplex = do
-  ak <- readApiKeyFromFile
-  envs <- getEnvironments ak [UserFilter "pachube", ContentFilter SCSummary, 
-               PageFilter 1, PerPageFilter 5, StatusFilter StatusLive]
-  print $ map envId envs
-  envsFree <- getEnvironments ak [FreeTextFilter "london", PerPageFilter 1]
-  print $ map envId envsFree
+demoGetEnvs = do
+  -- retrieve environments by tag and owner
+  envs <- getEnvironments [TagFilter "air quality", UserFilter "andre"]
+  io $ either error (print . map envCreator) envs
+
+demoGetEnvs2 = do
+  result <- getEnvironments [UserFilter "pachube", ContentFilter SCSummary, 
+                                 PageFilter 1, PerPageFilter 5, 
+                                 StatusFilter StatusLive]
+  case result of
+    Left err -> io $ error err 
+    Right envs -> io $ print $ map envId envs
+
+demoGetEnvs3 = do
+  result <- getEnvironments [FreeTextFilter "london", PerPageFilter 1]
+  -- here's another way to handle the Left and Right of the Either type
+  io $ either error (print . map envId) result
 
 demoPrintXML = putStrLn $ outputEnvironment makeTestEnvironment
 
 demoGetEnvAndPrintXML = do
-  ak <- readApiKeyFromFile
-  env <- getEnvironment ak 504
+  env <- getEnvironment 504
   case env of
-    Left err -> putStrLn err
-    Right e -> putStrLn $ outputEnvironment e
+    Left err -> io $ putStrLn err
+    Right e -> io $ putStrLn $ outputEnvironment e
 
-demoUpdateEnv = do
-  ak <- readApiKeyFromFile
-  res <- updateDatastreamSimply ak 20319 "0" "updatedval"
-  putStrLn $ show res
+demoUpdateDatastream = do
+  res <- updateDatastreamSimply 23998 "0" "updatedval"
+  io $ putStrLn $ show res
 
-demoCreateEnv = do
-  ak <- readApiKeyFromFile
+demoCreateEnvAndUpdate = do
   let env = makeTestEnvironment 
-  envResult <- createEnvironment ak env
+  envResult <- createEnvironment env
   case envResult of
-    Left errMsg -> putStrLn errMsg
+    Left errMsg -> io $ putStrLn errMsg
     Right eId -> do
-      upSucc <- updateDatastreamSimply ak eId "0" "updatedval"
-      getResult <- getEnvironment ak eId
+      upSucc <- updateDatastreamSimply eId "0" "updatedval"
+      getResult <- getEnvironment eId
       case getResult of
-        Left errMsg2 -> putStrLn errMsg2
-        Right gotEnv -> putStrLn $ show gotEnv
+        Left errMsg2 -> io $ putStrLn errMsg2
+        Right gotEnv -> io $ putStrLn $ show gotEnv
 
-main = demoGetEnvAndPrintXML
+demos = [demoGetEnv, demoGetEnvs, demoGetEnvs2, demoGetEnvs3, 
+         demoGetEnvAndPrintXML, demoUpdateDatastream, 
+         demoCreateEnvAndUpdate]
+
+-- run all demos
+-- main = mapM_ withApiKeyFromFile demos
+
+-- run one demo.
+main = withApiKeyFromFile demoGetEnvs
+
+

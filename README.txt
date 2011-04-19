@@ -14,16 +14,22 @@ No API functions are exposed for handling Triggers, Users, or API-keys (e.g. no 
 Usage:
 ======
 
+Put your api key in ./api_key.txt
+
 See Example.hs for various examples of usage.
 
 Here's an example which retrieves environments by tag and owner, 
 then show only their title:
 
-    import PachubeClient
+import Types
+import PachubeClient
+import Control.Monad.Reader
 
-    main = do
-      envs <- getEnvironments [TagFilter "air quality", UserFilter "andre"]
-      print $ map envTitle envs
+main = withApiKeyFromFile $ do
+      res <- getEnvironments [TagFilter "air quality", UserFilter "andre"]
+      case res of
+        Left errMsg -> error errMsg
+        Right envs -> liftIO $ print $ map envTitle envs
 
 This should yield something like:
 [Just "Legible Landscapes",Just "Sensor Experiments"]

@@ -7,7 +7,6 @@ type UserName = String
 newtype ApiKey = ApiKey { apiKeyVal :: String }
 
 data Config = Config {apiKey :: ApiKey }
-type PM = Reader Config
 
 type PachubeTimestamp = String -- TODO: impl timestamp
 

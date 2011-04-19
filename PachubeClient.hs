@@ -7,9 +7,9 @@ import Network.URI
 import Text.Regex.Posix
 
 import Types
-import PachubeClientAPIKey
 import XmlParse hiding (main)
 import Output
+
 
 data FeedStatus = StatusLive | StatusFrozen deriving (Eq, Ord, Show)
 data SearchContentOption = SCSummary | SCFull deriving (Eq, Ord, Show)
@@ -49,8 +49,9 @@ instance Paramable SearchFilter where
   toParam (OrderFilter    SORelevance)   = "order=relevance"
   toParam (OrderFilter    SOCreatedAt)   = "order=created_at"
   toParam (OrderFilter    SORetrievedAt) = "order=retrieved_at"
-myAPIKeyHeader :: Header
-myAPIKeyHeader = Header (HdrCustom "X-PachubeApiKey") getAPIKey
+
+myAPIKeyHeader :: ApiKey -> Header
+myAPIKeyHeader ak = Header (HdrCustom "X-PachubeApiKey") (apiKey ak)
 
 acceptHeader :: Header
 acceptHeader = Header HdrAccept mimeTypeXML
@@ -61,15 +62,15 @@ contentLengthHeader body = Header (HdrCustom "Content-Length") $ show $ length b
 mimeTypeXML :: String
 mimeTypeXML = "application/xml"
 
-downloadEnvironments :: [SearchFilter] -> IO (Either String String)
-downloadEnvironments fs = downloadURL $ makeURLGetEnvironments fs
+downloadEnvironments :: ApiKey -> [SearchFilter] -> IO (Either String String)
+downloadEnvironments ak fs = downloadURL ak $ makeURLGetEnvironments fs
 
-downloadEnvironment :: EnvironmentId -> IO (Either String String)
-downloadEnvironment feedId = downloadURL $ makeURLGetEnvironment feedId
+downloadEnvironment :: ApiKey -> EnvironmentId -> IO (Either String String)
+downloadEnvironment ak feedId = downloadURL ak $ makeURLGetEnvironment feedId
 
-getEnvironments :: [SearchFilter] -> IO [Environment]
-getEnvironments fs = do
-    respEither <- downloadEnvironments fs
+getEnvironments :: ApiKey -> [SearchFilter] -> IO [Environment]
+getEnvironments ak fs = do
+    respEither <- downloadEnvironments ak fs
     case respEither of
       Left errMsg -> do 
                       putStrLn $ "Failed" ++ errMsg
@@ -78,12 +79,12 @@ getEnvironments fs = do
                      Just envs -> return envs
                      Nothing   -> return []
 
-getUserEnvironments :: UserName -> IO [Environment]
-getUserEnvironments u = getEnvironments [UserFilter u]
+getUserEnvironments :: ApiKey -> UserName -> IO [Environment]
+getUserEnvironments ak u = getEnvironments ak [UserFilter u]
 
-getEnvironment :: EnvironmentId -> IO (Either String Environment)
-getEnvironment fId = do 
-    resp <- downloadEnvironment fId
+getEnvironment :: ApiKey -> EnvironmentId -> IO (Either String Environment)
+getEnvironment ak fId = do 
+    resp <- downloadEnvironment ak fId
     -- putStrLn $ "Response: " ++ show resp
     case resp of
        Left errMsg -> return $ Left $ "failed to get feed " ++ errMsg
@@ -91,10 +92,10 @@ getEnvironment fId = do
                           Just env     -> return $ Right env
                           Nothing      -> return $ Left "couldn't parse env"
 
-createEnvironment :: Environment -> IO (Either String EnvironmentId)
-createEnvironment env = do
+createEnvironment :: ApiKey -> Environment -> IO (Either String EnvironmentId)
+createEnvironment ak env = do
   let envText = outputEnvironment env
-  respMaybe <- doPost makeURLCreateEnvironment envText
+  respMaybe <- doPost ak makeURLCreateEnvironment envText
   case respMaybe of
     Left err -> return $ Left err
     Right resp -> do
@@ -105,33 +106,33 @@ createEnvironment env = do
                      Just feedId -> Right feedId
                   Nothing -> Left "No location header."
 
-deleteEnvironment :: EnvironmentId -> IO (Either String Bool)
-deleteEnvironment feedId = do
-  rMaybe <- doDelete $ makeURLDeleteEnvironment feedId
+deleteEnvironment :: ApiKey -> EnvironmentId -> IO (Either String Bool)
+deleteEnvironment ak feedId = do
+  rMaybe <- doDelete ak $ makeURLDeleteEnvironment feedId
   case rMaybe of
     Left err -> return $ Left err
     Right resp -> return $ Right True
     
-updateEnvironment :: Environment -> IO (Either String Bool)
-updateEnvironment env = do
+updateEnvironment :: ApiKey -> Environment -> IO (Either String Bool)
+updateEnvironment ak env = do
   let envText = outputEnvironment env
   let eId = envId env
-  resp <- doPut (baseURL++"/feeds/"++ show eId ++".xml") envText
+  resp <- doPut ak (baseURL++"/feeds/"++ show eId ++".xml") envText
   print resp
   return $ Right True
 
-updateDatastreamSimply :: EnvironmentId -> DatastreamId -> String 
+updateDatastreamSimply :: ApiKey -> EnvironmentId -> DatastreamId -> String 
                           -> IO (Either String Bool)
-updateDatastreamSimply ei di val = do
+updateDatastreamSimply ak ei di val = do
   let ds = (makeEmptyDatastream di) { dsCurrentValue = Just val }
-  updateDatastream ei ds
+  updateDatastream ak ei ds
 
-updateDatastream :: EnvironmentId -> Datastream -> IO (Either String Bool)
-updateDatastream ei ds = do
+updateDatastream :: ApiKey -> EnvironmentId -> Datastream -> IO (Either String Bool)
+updateDatastream ak ei ds = do
   let e = makeEmptyEnvironment { envId = ei, envDatastreams = [ds]}
   let xml = outputEnvironment e
   let url = makeURLUpdateDatastream ei (dsId ds)
-  respEither <- doPut url xml
+  respEither <- doPut ak url xml
   case respEither of
     Left err -> return $ Left err
     Right resp -> return $ Right True
@@ -163,9 +164,9 @@ makeURLUpdateDatastream ei di =
 
 {- | Download a URL.  (Left errorMessage) if an error,
 (Right doc) if success. -}
-downloadURL :: String -> IO (Either String String)
-downloadURL url =
-    do resp <- simpleHTTP request
+downloadURL :: ApiKey -> String -> IO (Either String String)
+downloadURL ak url = do 
+       resp <- simpleHTTP request
        case resp of
          Left x -> return $ Left ("Error connecting: " ++ show x)
          Right r -> 
@@ -175,25 +176,25 @@ downloadURL url =
                (3,_,_) -> -- A HTTP redirect - follow if possible
                  case findHeader HdrLocation r of
                    Nothing -> return $ Left (show r)
-                   Just newURL -> downloadURL newURL
+                   Just newURL -> downloadURL ak newURL
                _ -> return $ Left (show r)
     where request = Request {rqURI = uri,
                              rqMethod = GET,
-                             rqHeaders = [myAPIKeyHeader, acceptHeader],
+                             rqHeaders = [myAPIKeyHeader ak, acceptHeader],
                              rqBody = ""}
           uri = fromMaybe (error $ "bad url: " ++ url) $ parseURI url
 
-doPut :: String -> String -> IO (Either String (Response String))
-doPut url body = doReq url PUT [myAPIKeyHeader, contentLengthHeader body] body
+doPut :: ApiKey -> String -> String -> IO (Either String (Response String))
+doPut ak url body = doReq ak url PUT [myAPIKeyHeader ak, contentLengthHeader body] body
 
-doPost :: String -> String -> IO (Either String (Response String))
-doPost url body = doReq url POST [myAPIKeyHeader, contentLengthHeader body] body
+doPost :: ApiKey -> String -> String -> IO (Either String (Response String))
+doPost ak url body = doReq ak url POST [myAPIKeyHeader ak, contentLengthHeader body] body
 
-doDelete :: String -> IO (Either String (Response String))
-doDelete url = doReq url DELETE [myAPIKeyHeader] ""
+doDelete :: ApiKey -> String -> IO (Either String (Response String))
+doDelete ak url = doReq ak url DELETE [myAPIKeyHeader ak] ""
 
-doReq :: String -> RequestMethod -> [Header] -> String -> IO (Either String (Response String))
-doReq url method headers body =
+doReq :: ApiKey -> String -> RequestMethod -> [Header] -> String -> IO (Either String (Response String))
+doReq ak url method headers body =
     do resp <- simpleHTTP request
        case resp of
          Left x -> return $ Left ("Error connecting: " ++ show x)
@@ -204,7 +205,7 @@ doReq url method headers body =
                (3,_,_) -> -- A HTTP redirect - follow if possible
                  case findHeader HdrLocation r of
                    Nothing -> return $ Left (show r)
-                   Just newURL -> doReq newURL method headers body
+                   Just newURL -> doReq ak newURL method headers body
                _ -> return $ Left (show r)
     where request = Request {rqURI = uri,
                              rqMethod = method,

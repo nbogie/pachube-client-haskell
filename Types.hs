@@ -3,6 +3,7 @@ module Types where
 type EnvironmentId = Integer
 type DatastreamId = String
 type UserName = String
+newtype ApiKey = ApiKey { apiKey :: String }
 
 type PachubeTimestamp = String -- TODO: impl timestamp
 

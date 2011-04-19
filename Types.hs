@@ -1,9 +1,13 @@
 module Types where
-
+import Control.Monad.Reader
 type EnvironmentId = Integer
 type DatastreamId = String
 type UserName = String
-newtype ApiKey = ApiKey { apiKey :: String }
+
+newtype ApiKey = ApiKey { apiKeyVal :: String }
+
+data Config = Config {apiKey :: ApiKey }
+type PM = Reader Config
 
 type PachubeTimestamp = String -- TODO: impl timestamp
 

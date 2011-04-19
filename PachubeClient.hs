@@ -5,6 +5,7 @@ import Data.Maybe
 import Network.HTTP
 import Network.URI
 import Text.Regex.Posix
+import Control.Monad.Reader
 
 import Types
 import XmlParse hiding (main)
@@ -16,6 +17,7 @@ data SearchContentOption = SCSummary | SCFull deriving (Eq, Ord, Show)
 data SearchOrderOption = SOCreatedAt | SORetrievedAt | SORelevance 
        deriving (Eq, Ord, Show)
 
+makeConfigWithApiKey k = Config { apiKey = ApiKey k }
 -- in getEnvironments one can supply a list of search filters
 -- The rules of combination are not enforced here yet.
 -- TODO: some of these are "filters", some change output format, paging.

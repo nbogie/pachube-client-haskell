@@ -1,3 +1,0 @@
-module PachubeClientAPIKey where
-  getAPIKey :: String
-  getAPIKey  = "YOURAPIKEYHERE"

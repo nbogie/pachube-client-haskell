@@ -20,7 +20,9 @@ Tested-with:    GHC ==6.12
 Cabal-version:  >= 1.4
 
 Library
-  Exposed-modules: PachubeClient
+  Exposed-modules: 
+    Pachube.PachubeClient, Pachube.Types, 
+    Pachube.XmlParse, Pachube.Output
 
   Build-depends:
     base == 4.2.0.0, 

@@ -1,5 +1,7 @@
-module Types where
+module Pachube.Types where
+
 import Control.Monad.Reader
+
 type EnvironmentId = Integer
 type DatastreamId = String
 type UserName = String

@@ -9,20 +9,20 @@ Coverage:
 
 CRUD operations for Environments are available, under the v2 API.  http://api.pachube.com/v2/
 
-No API functions are exposed for handling Triggers, Users, or API-keys (e.g. no listing your api-keys)
+No API functions are so far exposed for handling Triggers, Users, or API-keys (e.g. no listing your advanced API-keys)
 
 Usage:
 ======
 
-Put your api key in ./api_key.txt
+Put your API key in ./api_key.txt
 
 See Example.hs for various examples of usage.
 
 Here's an example which retrieves environments by tag and owner, 
 then show only their title:
 
-import Types
-import PachubeClient
+import Pachube.Types
+import Pachube.PachubeClient
 import Control.Monad.Reader
 
 main = withApiKeyFromFile $ do
@@ -33,3 +33,20 @@ main = withApiKeyFromFile $ do
 
 This should yield something like:
 [Just "Legible Landscapes",Just "Sensor Experiments"]
+
+You can also set your API key from a String:
+
+withApiKey "yourkeygoeshere" $ getEnvironment 504
+
+If you have installed the package with cabal, you can script with it in the GHCI console:
+
+Prelude> :m +Pachube.PachubeClient Pachube.Types 
+
+Prelude> Right envs <- withApiKey "yourAPIkeyhere" $ getEnvironments [TagFilter "arduino", PerPageFilter 5]
+
+Prelude> map envTitle envs 
+[Just "[5751] Archiduino Project: 10 (Environment)",
+ Just "[5764] Archiduino Project: 11 (Building)",
+ Just "House Sensors", Just "arduino_ethershield", 
+ Just "Vaihingen Temperature"]
+

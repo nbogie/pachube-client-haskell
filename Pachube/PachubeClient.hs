@@ -1,4 +1,4 @@
-module PachubeClient where
+module Pachube.PachubeClient where
 
 import Data.List (intercalate, find)
 import Data.Maybe
@@ -8,9 +8,9 @@ import Text.Regex.Posix
 import Control.Monad.Reader
 import Data.Char (isSpace)
 
-import Types
-import XmlParse hiding (main)
-import Output
+import Pachube.Types
+import Pachube.XmlParse hiding (main)
+import Pachube.Output
 
 type ErrorMsg = String
 
@@ -20,6 +20,12 @@ data SearchOrderOption = SOCreatedAt | SORetrievedAt | SORelevance
        deriving (Eq, Ord, Show)
 
 type PBMonad = ReaderT Config IO
+
+withApiKey :: String -> PBMonad a -> IO a
+withApiKey keyStr fn = do
+  let key = ApiKey keyStr
+  let config = Config { apiKey = key }
+  runReaderT fn config
 
 withApiKeyFromFile :: PBMonad a -> IO a
 withApiKeyFromFile fn = do

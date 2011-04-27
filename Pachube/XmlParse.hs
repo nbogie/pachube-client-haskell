@@ -1,4 +1,4 @@
-module XmlParse where
+module Pachube.XmlParse where
 -- http://hackage.haskell.org/packages/archive/xml/latest/doc/html/Text-XML-Light-Proc.html#v:findChildren 
 -- https://github.com/acw/eve/blob/2a6f930771d88d4847d96c4c86ad86a7897b945c/EVE/LowLevel/API.hs
 -- http://koweycode.blogspot.com/2009/02/inkscape-layers.html
@@ -6,7 +6,7 @@ module XmlParse where
 import Data.Maybe (fromJust)
 import Text.XML.Light
 
-import Types
+import Pachube.Types
 
 parseEnvironmentXML :: String -> Maybe Environment
 --TODO:  error handling

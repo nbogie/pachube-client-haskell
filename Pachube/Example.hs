@@ -1,12 +1,13 @@
-module Main where
+module Pachube.Main where
 
-import Types
-import PachubeClient
-import Output
+import Pachube.Types
+import Pachube.PachubeClient
+import Pachube.Output
 import Control.Monad.Reader
 
 -- convenience alias.
 io = liftIO
+
 
 demoGetEnv :: PBMonad ()
 demoGetEnv = do
@@ -65,5 +66,4 @@ demos = [demoGetEnv, demoGetEnvs, demoGetEnvs2, demoGetEnvs3,
 
 -- run one demo.
 main = withApiKeyFromFile demoGetEnvs
-
 

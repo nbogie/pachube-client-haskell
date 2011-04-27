@@ -1,5 +1,5 @@
-import Types
-import PachubeClient
+import Pachube.Types
+import Pachube.PachubeClient
 import Control.Monad.Reader
 
 main = withApiKeyFromFile $ do

@@ -1,9 +1,9 @@
-module Output where
+module Pachube.Output where
 
 import Text.XML.Light
 import Data.Maybe (catMaybes)
 
-import Types
+import Pachube.Types
 
 stdAttrs :: [Attr]
 stdAttrs = map (\(k,v) -> Attr (unqual k) v) pairs

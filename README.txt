@@ -50,3 +50,4 @@ Prelude> map envTitle envs
  Just "House Sensors", Just "arduino_ethershield", 
  Just "Vaihingen Temperature"]
 
+Prelude> withApiKeyFromFile $ updateDatastreamSimply 24005 "mydsid" "100.5"
